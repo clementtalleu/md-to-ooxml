@@ -1,0 +1,56 @@
+{
+    "name": "talleu/md-to-ooxml",
+    "description": "A lightweight PHP library to convert Markdown to Office Open XML (OOXML) and .docx files",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["markdown", "ooxml", "docx", "word", "converter", "xml"],
+    "require": {
+        "php": ">=8.3"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.94",
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.5",
+        "league/commonmark": "^2.8",
+        "ext-zip": "*"
+    },
+    "suggest": {
+        "league/commonmark": "Install to use the CommonMark parser adapter for robust Markdown parsing.",
+        "ext-zip": "Required to generate .docx files with DocxWriter."
+    },
+    "autoload": {
+        "psr-4": {
+            "Talleu\\MdToOoxml\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Talleu\\MdToOoxml\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Clément Talleu",
+            "email": "clement.talleu@gmail.com"
+        }
+    ],
+    "scripts": {
+        "test": "phpunit --testdox",
+        "test:unit": "phpunit --testsuite Unit --testdox",
+        "test:integration": "phpunit --testsuite Integration --testdox",
+        "test:functional": "phpunit --testsuite Functional --testdox",
+        "test:coverage": "phpunit --coverage-text --coverage-clover=coverage.xml",
+        "phpstan": "phpstan analyse --no-progress",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "ci": [
+            "@phpstan",
+            "@cs:check",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
+
