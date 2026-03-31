@@ -90,10 +90,10 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
     /**
      * @param array{is_bold?: bool, is_italic?: bool, is_strikethrough?: bool, list_type?: string} $context
      */
-    private function mapChildren(LeagueNode $leagueParent, NodeInterface $talleuParent, array $context = []): void
+    private function mapChildren(LeagueNode $leagueParent, NodeInterface $ownParent, array $context = []): void
     {
         foreach ($leagueParent->children() as $child) {
-            $this->mapNode($child, $talleuParent, $context);
+            $this->mapNode($child, $ownParent, $context);
         }
     }
 
@@ -102,18 +102,18 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
      *
      * @param array{is_bold?: bool, is_italic?: bool, is_strikethrough?: bool, list_type?: string} $context
      */
-    private function mapNode(LeagueNode $node, NodeInterface $talleuParent, array $context): void
+    private function mapNode(LeagueNode $node, NodeInterface $ownParent, array $context): void
     {
         // --- Block-level nodes ---
 
         if ($node instanceof LeagueParagraph) {
             // Inside a list item or blockquote, League wraps text in a Paragraph — we skip it
             // to avoid nested <w:p> elements (invalid OOXML).
-            if ($talleuParent instanceof ListItemNode || $talleuParent instanceof QuoteNode) {
-                $this->mapChildren($node, $talleuParent, $context);
+            if ($ownParent instanceof ListItemNode || $ownParent instanceof QuoteNode) {
+                $this->mapChildren($node, $ownParent, $context);
             } else {
                 $paragraphNode = new ParagraphNode();
-                $talleuParent->addChild($paragraphNode);
+                $ownParent->addChild($paragraphNode);
                 $this->mapChildren($node, $paragraphNode, $context);
             }
 
@@ -122,7 +122,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
 
         if ($node instanceof Heading) {
             $titleNode = new TitleNode($node->getLevel());
-            $talleuParent->addChild($titleNode);
+            $ownParent->addChild($titleNode);
             $this->mapChildren($node, $titleNode, $context);
 
             return;
@@ -130,7 +130,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
 
         if ($node instanceof BlockQuote) {
             $quoteNode = new QuoteNode();
-            $talleuParent->addChild($quoteNode);
+            $ownParent->addChild($quoteNode);
             $this->mapChildren($node, $quoteNode, $context);
 
             return;
@@ -138,21 +138,21 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
 
         if ($node instanceof ListBlock) {
             $context['list_type'] = $node->getListData()->type === ListBlock::TYPE_BULLET ? 'bullet' : 'number';
-            $this->mapChildren($node, $talleuParent, $context);
+            $this->mapChildren($node, $ownParent, $context);
 
             return;
         }
 
         if ($node instanceof ListItem) {
             $listItemNode = new ListItemNode($context['list_type'] ?? 'bullet');
-            $talleuParent->addChild($listItemNode);
+            $ownParent->addChild($listItemNode);
             $this->mapChildren($node, $listItemNode, $context);
 
             return;
         }
 
         if ($node instanceof FencedCode) {
-            $talleuParent->addChild(new CodeBlockNode(
+            $ownParent->addChild(new CodeBlockNode(
                 rtrim($node->getLiteral()),
                 $node->getInfo() ?: null,
             ));
@@ -161,13 +161,13 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
         }
 
         if ($node instanceof IndentedCode) {
-            $talleuParent->addChild(new CodeBlockNode(rtrim($node->getLiteral())));
+            $ownParent->addChild(new CodeBlockNode(rtrim($node->getLiteral())));
 
             return;
         }
 
         if ($node instanceof ThematicBreak) {
-            $talleuParent->addChild(new HorizontalRuleNode());
+            $ownParent->addChild(new HorizontalRuleNode());
 
             return;
         }
@@ -176,7 +176,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
 
         if ($node instanceof LeagueTable) {
             $tableNode = new TableNode();
-            $talleuParent->addChild($tableNode);
+            $ownParent->addChild($tableNode);
             // Table contains TableSection (head/body) which contains TableRow
             foreach ($node->children() as $section) {
                 if ($section instanceof TableSection) {
@@ -204,33 +204,33 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
 
         if ($node instanceof Strong) {
             $context['is_bold'] = true;
-            $this->mapChildren($node, $talleuParent, $context);
+            $this->mapChildren($node, $ownParent, $context);
 
             return;
         }
 
         if ($node instanceof Emphasis) {
             $context['is_italic'] = true;
-            $this->mapChildren($node, $talleuParent, $context);
+            $this->mapChildren($node, $ownParent, $context);
 
             return;
         }
 
         if ($node instanceof Strikethrough) {
             $context['is_strikethrough'] = true;
-            $this->mapChildren($node, $talleuParent, $context);
+            $this->mapChildren($node, $ownParent, $context);
 
             return;
         }
 
         if ($node instanceof LeagueInlineCode) {
-            $talleuParent->addChild(new InlineCodeNode($node->getLiteral()));
+            $ownParent->addChild(new InlineCodeNode($node->getLiteral()));
 
             return;
         }
 
         if ($node instanceof LeagueText) {
-            $talleuParent->addChild(new TextRunNode(
+            $ownParent->addChild(new TextRunNode(
                 $node->getLiteral(),
                 isBold: $context['is_bold'] ?? false,
                 isItalic: $context['is_italic'] ?? false,
@@ -241,7 +241,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
         }
 
         if ($node instanceof Link) {
-            $talleuParent->addChild(new LinkNode(
+            $ownParent->addChild(new LinkNode(
                 $this->extractPlainText($node),
                 $node->getUrl(),
             ));
@@ -250,7 +250,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
         }
 
         if ($node instanceof LeagueImage) {
-            $talleuParent->addChild(new ImageNode(
+            $ownParent->addChild(new ImageNode(
                 $this->extractPlainText($node),
                 $node->getUrl(),
             ));
@@ -263,7 +263,7 @@ class LeagueCommonMarkAdapter implements MarkdownParserInterface
         }
 
         // Fallback: try to map children for unknown container nodes
-        $this->mapChildren($node, $talleuParent, $context);
+        $this->mapChildren($node, $ownParent, $context);
     }
 
     private function extractPlainText(LeagueNode $node): string
