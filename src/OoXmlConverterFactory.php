@@ -77,6 +77,16 @@ class OoXmlConverterFactory
         return new OoXmlConverter($parser, self::buildNodeRenderer());
     }
 
+    /**
+     * Create a fully configured NodeRenderer without a parser.
+     *
+     * Useful when you build the AST yourself and only need the rendering step.
+     */
+    public static function createRenderer(): NodeRenderer
+    {
+        return self::buildNodeRenderer();
+    }
+
     private static function buildNodeRenderer(): NodeRenderer
     {
         $renderer = new NodeRenderer();
