@@ -22,9 +22,7 @@ class ImageRenderer implements RendererInterface
         $alt = htmlspecialchars($node->getAltText(), ENT_XML1 | ENT_QUOTES, 'UTF-8');
         $url = htmlspecialchars($node->getUrl(), ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
-        return '<w:p>'
-            . '<w:r><w:rPr><w:i/><w:color w:val="666666"/></w:rPr>'
-            . '<w:t xml:space="preserve">[Image: ' . $alt . '] (' . $url . ')</w:t></w:r>'
-            . '</w:p>';
+        return '<w:r><w:rPr><w:i/><w:color w:val="666666"/></w:rPr>'
+            . '<w:t xml:space="preserve">[Image: ' . $alt . '] (' . $url . ')</w:t></w:r>';
     }
 }

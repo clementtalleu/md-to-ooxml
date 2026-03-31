@@ -189,6 +189,19 @@ class DocxWriterTest extends TestCase
         $zip->close();
     }
 
+    public function testDocxWithImageProducesValidOoxml(): void
+    {
+        $converter = OoXmlConverterFactory::create();
+        $bodyXml = $converter->convertToBodyXml('![Logo](https://example.com/logo.png)');
+
+        // No nested <w:p>
+        $this->assertSame(0, preg_match('/<w:p>\s*<w:p>/', $bodyXml), 'Body XML must not contain nested <w:p> elements');
+
+        // Must have exactly one <w:p> wrapping the image run
+        $this->assertSame(1, substr_count($bodyXml, '<w:p>'));
+        $this->assertSame(1, substr_count($bodyXml, '</w:p>'));
+    }
+
     public function testInjectIntoTemplate(): void
     {
         // First create a "template" docx

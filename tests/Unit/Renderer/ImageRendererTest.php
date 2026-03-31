@@ -10,13 +10,19 @@ use Talleu\MdToOoxml\Renderer\ImageRenderer;
 
 class ImageRendererTest extends TestCase
 {
-    public function testRenderImage(): void
+    public function testRenderReturnsRunWithoutParagraphWrapper(): void
     {
+        $node = new ImageNode('Logo du cabinet', 'https://example.com/logo.png');
         $renderer = new ImageRenderer();
-        $node = new ImageNode('Company Logo', 'https://example.com/logo.png');
-        $xml = $renderer->render($node);
+        $result = $renderer->render($node);
 
-        $this->assertStringContainsString('[Image: Company Logo]', $xml);
-        $this->assertStringContainsString('https://example.com/logo.png', $xml);
+        // Must return a <w:r>, not a <w:p>
+        $this->assertStringStartsWith('<w:r>', $result);
+        $this->assertStringEndsWith('</w:r>', $result);
+        $this->assertStringNotContainsString('<w:p>', $result);
+
+        // Content check
+        $this->assertStringContainsString('[Image: Logo du cabinet]', $result);
+        $this->assertStringContainsString('https://example.com/logo.png', $result);
     }
 }
