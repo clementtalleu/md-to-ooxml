@@ -28,6 +28,7 @@
             "Talleu\\MdToOoxml\\Tests\\": "tests/"
         }
     },
+    "homepage": "https://github.com/clementtalleu/md-to-ooxml",
     "authors": [
         {
             "name": "Clément Talleu",
