@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Talleu\MdToOoxml;
 
+use League\CommonMark\Parser\MarkdownParser;
 use RuntimeException;
 use Talleu\MdToOoxml\Node\BlankLineNode;
 use Talleu\MdToOoxml\Node\CodeBlockNode;
@@ -18,6 +19,7 @@ use Talleu\MdToOoxml\Node\QuoteNode;
 use Talleu\MdToOoxml\Node\TableNode;
 use Talleu\MdToOoxml\Node\TextRunNode;
 use Talleu\MdToOoxml\Node\TitleNode;
+use Talleu\MdToOoxml\Parser\Adapter\LeagueCommonMarkAdapter;
 use Talleu\MdToOoxml\Parser\BlockParser;
 use Talleu\MdToOoxml\Parser\InlineParser;
 use Talleu\MdToOoxml\Parser\MarkdownParserInterface;
@@ -58,13 +60,13 @@ class OoXmlConverterFactory
      */
     public static function createWithCommonMark(): OoXmlConverter
     {
-        if (!class_exists(\League\CommonMark\Parser\MarkdownParser::class)) {
+        if (!class_exists(MarkdownParser::class)) {
             throw new RuntimeException(
                 'league/commonmark is required. Install it with: composer require league/commonmark',
             );
         }
 
-        $parser = new \Talleu\MdToOoxml\Parser\Adapter\LeagueCommonMarkAdapter();
+        $parser = new LeagueCommonMarkAdapter();
 
         return new OoXmlConverter($parser, self::buildNodeRenderer());
     }
