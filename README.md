@@ -133,15 +133,23 @@ The default parser handles all common Markdown syntax via regex-based parsing. I
 $converter = OoXmlConverterFactory::create();
 ```
 
+> **Limitation:** The built-in parser does not support nested inline formatting. For example, `__some *italic* text__` will render the underline but treat the `*italic*` markers as literal text. If you need nested formatting (italic inside bold, underline inside strikethrough, etc.), use the CommonMark adapter below.
+
 ### League CommonMark Adapter
 
-For stricter CommonMark compliance, use the adapter for [`league/commonmark`](https://commonmark.thephpleague.com/):
+For advanced Markdown features, use the adapter for [`league/commonmark`](https://commonmark.thephpleague.com/):
 
 ```php
 $converter = OoXmlConverterFactory::createWithCommonMark();
 ```
 
 The adapter automatically enables the Table and Strikethrough extensions if available.
+
+**Use the CommonMark adapter when you need:**
+
+- Nested inline formatting (e.g. bold inside italic, italic inside underline)
+- Strict [CommonMark](https://spec.commonmark.org/) compliance
+- Edge cases the built-in regex parser may not handle correctly
 
 ### Custom Parser
 
