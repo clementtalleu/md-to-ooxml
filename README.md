@@ -121,6 +121,47 @@ $documentXml = $converter->convert($markdown);
 DocxWriter::save($documentXml, '/path/to/output.docx');
 ```
 
+### 5. Render directly from an AST
+
+If you already have a structured document (e.g. from your own parser, a CMS, or an API), you can skip the Markdown parsing step and pass an AST directly:
+
+```php
+use Talleu\MdToOoxml\OoXmlConverterFactory;
+use Talleu\MdToOoxml\Node\DocumentNode;
+use Talleu\MdToOoxml\Node\ParagraphNode;
+use Talleu\MdToOoxml\Node\TitleNode;
+use Talleu\MdToOoxml\Node\TextRunNode;
+
+$converter = OoXmlConverterFactory::create();
+
+// Build the AST
+$doc = new DocumentNode();
+
+$title = new TitleNode(1);
+$title->addChild(new TextRunNode('My Title'));
+$doc->addChild($title);
+
+$paragraph = new ParagraphNode();
+$paragraph->addChild(new TextRunNode('Some text '));
+$paragraph->addChild(new TextRunNode('in bold', isBold: true));
+$doc->addChild($paragraph);
+
+// Full document XML
+$xml = $converter->renderDocument($doc);
+
+// Or body fragment only
+$bodyXml = $converter->renderToBodyXml($doc);
+```
+
+You can also get a standalone renderer without any parser dependency:
+
+```php
+$renderer = OoXmlConverterFactory::createRenderer();
+$xml = $renderer->render($doc);
+```
+
+See the [Node Types](#node-types) table below for all available nodes and their properties.
+
 ---
 
 ## Parsers

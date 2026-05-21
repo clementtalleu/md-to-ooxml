@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Talleu\MdToOoxml\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
+use Talleu\MdToOoxml\Node\BlankLineNode;
+use Talleu\MdToOoxml\Node\DocumentNode;
+use Talleu\MdToOoxml\Node\ParagraphNode;
+use Talleu\MdToOoxml\Node\TextRunNode;
+use Talleu\MdToOoxml\Node\TitleNode;
 use Talleu\MdToOoxml\OoXmlConverterFactory;
 
 /**
@@ -185,5 +190,88 @@ class OoXmlConverterTest extends TestCase
         $xml = $converter->convert('Tom & Jerry <3');
 
         $this->assertStringContainsString('Tom &amp; Jerry &lt;3', $xml);
+    }
+
+    public function testRenderDocument(): void
+    {
+        $converter = OoXmlConverterFactory::create();
+
+        $doc = new DocumentNode();
+        $title = new TitleNode(1);
+        $title->addChild(new TextRunNode('Hello'));
+        $doc->addChild($title);
+        $paragraph = new ParagraphNode();
+        $paragraph->addChild(new TextRunNode('Some text'));
+        $paragraph->addChild(new TextRunNode('bold part', isBold: true));
+        $doc->addChild($paragraph);
+
+        $xml = $converter->renderDocument($doc);
+
+        $this->assertStringStartsWith('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>', $xml);
+        $this->assertStringContainsString('<w:document', $xml);
+        $this->assertStringContainsString('Heading1', $xml);
+        $this->assertStringContainsString('Hello', $xml);
+        $this->assertStringContainsString('Some text', $xml);
+        $this->assertStringContainsString('<w:b/>', $xml);
+        $this->assertStringContainsString('bold part', $xml);
+    }
+
+    public function testRenderToBodyXml(): void
+    {
+        $converter = OoXmlConverterFactory::create();
+
+        $doc = new DocumentNode();
+        $paragraph = new ParagraphNode();
+        $paragraph->addChild(new TextRunNode('Hello'));
+        $paragraph->addChild(new TextRunNode('italic', isItalic: true));
+        $doc->addChild($paragraph);
+
+        $xml = $converter->renderToBodyXml($doc);
+
+        $this->assertStringNotContainsString('<?xml', $xml);
+        $this->assertStringNotContainsString('<w:document', $xml);
+        $this->assertStringContainsString('<w:p>', $xml);
+        $this->assertStringContainsString('Hello', $xml);
+        $this->assertStringContainsString('<w:i/>', $xml);
+    }
+
+    public function testRenderDocumentProducesSameOutputAsConvert(): void
+    {
+        $converter = OoXmlConverterFactory::create();
+
+        $markdown = "# Title\n\nA **bold** paragraph.";
+
+        $fromMarkdown = $converter->convert($markdown);
+
+        // Build the equivalent AST manually (including the BlankLineNode the parser produces)
+        $doc = new DocumentNode();
+        $title = new TitleNode(1);
+        $title->addChild(new TextRunNode('Title'));
+        $doc->addChild($title);
+        $doc->addChild(new BlankLineNode());
+        $paragraph = new ParagraphNode();
+        $paragraph->addChild(new TextRunNode('A '));
+        $paragraph->addChild(new TextRunNode('bold', isBold: true));
+        $paragraph->addChild(new TextRunNode(' paragraph.'));
+        $doc->addChild($paragraph);
+
+        $fromAst = $converter->renderDocument($doc);
+
+        $this->assertSame($fromMarkdown, $fromAst);
+    }
+
+    public function testCreateRendererDirectly(): void
+    {
+        $renderer = OoXmlConverterFactory::createRenderer();
+
+        $doc = new DocumentNode();
+        $paragraph = new ParagraphNode();
+        $paragraph->addChild(new TextRunNode('Direct render'));
+        $doc->addChild($paragraph);
+
+        $xml = $renderer->render($doc);
+
+        $this->assertStringContainsString('<w:document', $xml);
+        $this->assertStringContainsString('Direct render', $xml);
     }
 }
